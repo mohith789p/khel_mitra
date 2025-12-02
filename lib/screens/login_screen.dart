@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:khel_mitra/input/custom_text_field.dart';
+import 'package:khel_mitra/screens/camera_recording_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -27,9 +28,11 @@ class _LoginScreenState extends State<LoginScreen> {
     bool loginSuccessful = true; // Replace with real login check
 
     if (loginSuccessful) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Login Successful')),
-      );
+       Navigator.of(context).pushReplacement(
+      MaterialPageRoute(
+        builder: (context) => CameraRecordingScreen(),
+      ),
+    );
     } else {
       // Optionally show an error
       ScaffoldMessenger.of(context).showSnackBar(
