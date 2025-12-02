@@ -20,6 +20,7 @@ class VideoPreviewScreen extends StatefulWidget {
 class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
   late final VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _isVideoFinished = false;
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
     try {
       await _controller.initialize();
       _controller.setLooping(false);
+      _controller.addListener(_videoListener);
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -44,8 +46,35 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
 
   @override
   void dispose() {
+    _controller.removeListener(_videoListener);
     _controller.dispose();
     super.dispose();
+  }
+
+  void _videoListener() {
+    final controller = _controller;
+    if (!mounted || !controller.value.isInitialized) return;
+
+    final position = controller.value.position;
+    final duration = controller.value.duration;
+
+    if (duration > Duration.zero && position >= duration) {
+      controller.pause();
+      if (!_isVideoFinished && mounted) {
+        setState(() {
+          _isVideoFinished = true;
+        });
+      }
+    }
+  }
+
+  void _replayVideo() {
+    _controller.pause();
+    _controller.seekTo(Duration.zero);
+    setState(() {
+      _isVideoFinished = false;
+    });
+    _controller.play();
   }
 
   @override
@@ -56,17 +85,20 @@ class _VideoPreviewScreenState extends State<VideoPreviewScreen> {
       );
     }
 
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Center(
-          child: AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          Center(
+            child: AspectRatio(
+              aspectRatio: _controller.value.aspectRatio,
+              child: VideoPlayer(_controller),
+            ),
           ),
-        ),
-        VideoControlsOverlay(controller: _controller),
-      ],
+          VideoControlsOverlay(controller: _controller),
+        ],
+      ),
     );
   }
 }

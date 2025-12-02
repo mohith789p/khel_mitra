@@ -12,7 +12,7 @@ class CustomButton extends StatelessWidget {
   final bool isLoading;
   final Color? backgroundColor;
   final Color? foregroundColor;
-  
+
   const CustomButton({
     super.key,
     required this.onPressed,
@@ -28,28 +28,29 @@ class CustomButton extends StatelessWidget {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Use primary color as default background, or accept an override
+    // Use primary color as default background, or accept an override.
     final effectiveBackgroundColor = backgroundColor ?? colorScheme.primary;
-    // Use onPrimary color as default text/icon color, or accept an override
+    // Use onPrimary color as default text/icon color, or accept an override.
     final effectiveForegroundColor = foregroundColor ?? colorScheme.onPrimary;
 
+    // More compact button than the original full-width, tall style.
     return SizedBox(
-      width: double.infinity, // Ensures button takes full width like the text field
+      height: 44, // Smaller fixed height for a compact look.
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed, // Disable button when loading
         style: ElevatedButton.styleFrom(
-          // 1. Adopt the rounded corners (16) from CustomTextField
+          // Rounded corners for a modern look.
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16), 
+            borderRadius: BorderRadius.circular(12),
           ),
-          // 2. Adopt the background color
+          // Background color.
           backgroundColor: effectiveBackgroundColor,
-          // 3. Adopt the text/icon color
+          // Text/icon color.
           foregroundColor: effectiveForegroundColor,
-          // 4. Adopt the generous vertical padding (similar to TextField contentPadding)
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-          // Ensure elevation is consistent
-          elevation: 0, 
+          // More compact horizontal padding.
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          // Ensure elevation is consistent.
+          elevation: 0,
           shadowColor: Colors.transparent,
         ),
         child: isLoading

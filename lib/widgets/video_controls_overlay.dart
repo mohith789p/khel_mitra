@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 import '../utils/timer_formatter.dart';
+import '../input/custom_button.dart';
 
 class VideoControlsOverlay extends StatelessWidget {
   final VideoPlayerController controller;
@@ -85,7 +86,7 @@ class VideoControlsOverlay extends StatelessWidget {
                 ],
               ),
             ),
-            // Bottom progress & timer
+            // Bottom progress, timer & static action buttons
             Align(
               alignment: Alignment.bottomCenter,
               child: Material(
@@ -136,6 +137,44 @@ class VideoControlsOverlay extends StatelessWidget {
                           ),
                         ],
                       ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: CustomButton(
+                              text: 'Retry',
+                              onPressed: () {
+                                // Go back to the camera recording screen.
+                                Navigator.of(context).pop();
+                              },
+                              backgroundColor: Colors.redAccent,
+                              foregroundColor: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: CustomButton(
+                              text: 'Submit',
+                              onPressed: () {
+                                // 1. Show SnackBar (tied to VideoPreviewScreen's Scaffold context)
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Video submitted successfully!')),
+                                );
+
+                                // 2. Wait for the user to see the message, then pop the screen.
+                                Future.delayed(
+                                    const Duration(milliseconds: 500), () {
+                                  // Navigate back to the previous screen (e.g., the dashboard)
+                                  Navigator.of(context).pop();
+                                });
+                              },
+                              // Uses theme primary by default for background color.
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),
@@ -147,5 +186,3 @@ class VideoControlsOverlay extends StatelessWidget {
     );
   }
 }
-
-
