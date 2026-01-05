@@ -60,22 +60,25 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
   }
 
   Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) return;
-
-    final backCamera = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-
-    _cameraController = CameraController(
-      backCamera,
-      ResolutionPreset.medium,
-      enableAudio: false,
-      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
-    );
-
     try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        _handleCameraError("No cameras available");
+        return;
+      }
+
+      final backCamera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        backCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+      );
+
       await _cameraController!.initialize();
       if (mounted && !_isCameraDisposed) {
         setState(() => _isInitialized = true);
@@ -83,6 +86,16 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
       }
     } catch (e) {
       debugPrint("Camera init error: $e");
+      _handleCameraError("Camera failed to initialize");
+    }
+  }
+
+  void _handleCameraError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message), backgroundColor: Colors.red),
+      );
+      Navigator.pop(context);
     }
   }
 

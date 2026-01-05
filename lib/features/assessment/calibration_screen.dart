@@ -99,25 +99,25 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   }
 
   Future<void> _initCamera() async {
-    final cameras = await availableCameras();
-    if (cameras.isEmpty) {
-      debugPrint("No cameras available");
-      return;
-    }
-
-    final backCamera = cameras.firstWhere(
-      (c) => c.lensDirection == CameraLensDirection.back,
-      orElse: () => cameras.first,
-    );
-
-    _cameraController = CameraController(
-      backCamera,
-      ResolutionPreset.medium,
-      enableAudio: false,
-      imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
-    );
-
     try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        _showError("No cameras available");
+        return;
+      }
+
+      final backCamera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.back,
+        orElse: () => cameras.first,
+      );
+
+      _cameraController = CameraController(
+        backCamera,
+        ResolutionPreset.medium,
+        enableAudio: false,
+        imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
+      );
+
       await _cameraController!.initialize();
       if (mounted && !_isCameraDisposed) {
         setState(() {
@@ -128,6 +128,23 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       }
     } catch (e) {
       debugPrint("Camera init error: $e");
+      _showError("Camera error: ${e.toString().split(':').last}");
+    }
+  }
+
+  void _showError(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          action: SnackBarAction(
+            label: 'Retry',
+            textColor: Colors.white,
+            onPressed: _initCamera,
+          ),
+        ),
+      );
     }
   }
 
