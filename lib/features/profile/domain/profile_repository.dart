@@ -7,4 +7,5 @@ abstract class ProfileRepository {
     required double heightCm,
   });
   Future<double?> getDiskSpaceFreeMb();
+  Future<double?> getHeightCm();
 }

@@ -41,4 +41,10 @@ class MockProfileRepository implements ProfileRepository {
       return 2048.0; // Fail open for mock
     }
   }
+
+  @override
+  Future<double?> getHeightCm() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getDouble(_kHeightKey);
+  }
 }
