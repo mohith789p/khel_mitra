@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:khel_mitra/features/assessment/data/attempts_repository.dart';
+import 'package:khel_mitra/core/di/injection.dart';
+import 'package:khel_mitra/features/assessment/domain/attempts_repository.dart';
 import 'package:khel_mitra/features/assessment/models/attempt_model.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -10,7 +11,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  final AttemptsRepository _attemptsRepo = AttemptsRepository();
+  final AttemptsRepository _attemptsRepo = getIt<AttemptsRepository>();
   List<AttemptModel> _attempts = [];
   bool _isLoading = true;
 

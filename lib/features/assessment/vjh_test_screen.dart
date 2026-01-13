@@ -4,7 +4,8 @@ import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
-import 'package:khel_mitra/features/assessment/data/attempts_repository.dart';
+import 'package:khel_mitra/core/di/injection.dart';
+import 'package:khel_mitra/features/assessment/domain/attempts_repository.dart';
 import 'package:khel_mitra/features/assessment/models/attempt_model.dart';
 import 'package:khel_mitra/features/assessment/pose_painter.dart';
 import 'package:khel_mitra/features/assessment/results_screen.dart';
@@ -51,7 +52,7 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
 
   // Video Recording
   String? _videoPath;
-  final AttemptsRepository _attemptsRepo = AttemptsRepository();
+  final AttemptsRepository _attemptsRepo = getIt<AttemptsRepository>();
 
   @override
   void initState() {
