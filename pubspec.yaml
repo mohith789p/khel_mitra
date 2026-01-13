@@ -42,6 +42,8 @@ dependencies:
   get_it: ^8.3.0
   injectable: ^2.5.1
   shared_preferences: ^2.3.3
+  firebase_core: ^2.27.0
+  firebase_auth: ^4.17.4
   gap: ^3.0.1
   camera: 0.10.5+9
   path_provider: ^2.1.5
