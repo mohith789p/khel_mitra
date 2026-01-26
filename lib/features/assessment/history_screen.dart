@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:khel_mitra/core/di/injection.dart';
+import 'package:khel_mitra/core/theme/app_theme.dart';
 import 'package:khel_mitra/features/assessment/domain/attempts_repository.dart';
+import 'package:khel_mitra/features/assessment/jump_replay_screen.dart';
 import 'package:khel_mitra/features/assessment/models/attempt_model.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -32,17 +35,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
-        title: const Text("Jump History"),
+        title: const Text("Jump History", style: TextStyle(color: AppTheme.textPrimary)),
+        centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
           onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
         ),
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.accent))
           : _attempts.isEmpty
               ? _buildEmptyState()
               : _buildAttemptsList(),
@@ -54,16 +58,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.history, size: 80, color: Colors.grey.shade600),
+          Icon(Icons.history, size: 80, color: AppTheme.textMuted),
           const SizedBox(height: 16),
           Text(
             "No attempts yet",
-            style: TextStyle(fontSize: 18, color: Colors.grey.shade400),
+            style: TextStyle(fontSize: 18, color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 8),
           Text(
             "Complete a jump test to see your history",
-            style: TextStyle(color: Colors.grey.shade600),
+            style: TextStyle(color: AppTheme.textMuted),
           ),
         ],
       ),
@@ -82,70 +86,86 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildAttemptCard(AttemptModel attempt, int index) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white10),
-      ),
-      child: Row(
-        children: [
-          // Rank/Number
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: _getRankColor(index),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: Text(
-                "${index + 1}",
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+    // Check if replay data exists
+    final hasReplay = attempt.hasReplay;
+    
+    return GestureDetector(
+      onTap: hasReplay ? () => _watchReplay(attempt) : null,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.white10),
+        ),
+        child: Row(
+          children: [
+            // Rank/Number
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: _getRankColor(index),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  "${index + 1}",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 16),
-          // Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(width: 16),
+            // Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _formatDate(attempt.timestamp),
+                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                  Text(
+                    _formatTime(attempt.timestamp),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            // Replay Play Icon
+            if (hasReplay)
+              Container(
+                margin: const EdgeInsets.only(right: 12),
+                child: Icon(
+                  Icons.replay_circle_filled,
+                  color: Colors.purple.shade400,
+                  size: 28,
+                ),
+              ),
+            // Jump Height
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  _formatDate(attempt.timestamp),
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  attempt.jumpHeightCm.toStringAsFixed(1),
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 Text(
-                  _formatTime(attempt.timestamp),
+                  "cm",
                   style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
                 ),
               ],
             ),
-          ),
-          // Jump Height
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                attempt.jumpHeightCm.toStringAsFixed(1),
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                "cm",
-                style: TextStyle(color: Colors.grey.shade500, fontSize: 12),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -167,5 +187,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   String _formatTime(DateTime timestamp) {
     return "${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}";
+  }
+
+  void _watchReplay(AttemptModel attempt) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => JumpReplayScreen(attempt: attempt),
+      ),
+    );
   }
 }

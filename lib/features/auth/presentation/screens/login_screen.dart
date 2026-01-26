@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gap/gap.dart';
+import 'package:khel_mitra/core/theme/app_theme.dart';
 import 'package:khel_mitra/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:khel_mitra/features/auth/presentation/screens/otp_screen.dart';
 
@@ -31,6 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is CodeSent) {
@@ -50,60 +51,61 @@ class _LoginScreenState extends State<LoginScreen> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.error,
               ),
             );
           }
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-          
+
           return SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: Form(
                 key: _formKey,
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Logo/Title
-                    const Icon(
-                      Icons.sports_gymnastics,
-                      size: 80,
-                      color: Colors.deepPurple,
-                    ),
-                    const Gap(16),
+                    const Spacer(flex: 2),
+                    // Title
                     const Text(
-                      "Khel Mitra",
+                      "User Login",
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                        fontStyle: FontStyle.italic,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const Gap(8),
-                    Text(
-                      "Athlete Login",
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.grey[600],
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const Gap(48),
+                    const Spacer(flex: 1),
                     
                     // Phone Number Field
+                    const Text(
+                      "PHONE NUMBER",
+                      style: AppTheme.labelText,
+                    ),
+                    const SizedBox(height: 8),
                     TextFormField(
                       controller: _phoneController,
                       enabled: !isLoading,
+                      style: AppTheme.bodyText,
                       decoration: InputDecoration(
-                        labelText: "Phone Number",
+                        hintText: "Enter your phone number",
+                        hintStyle: AppTheme.hintText,
                         prefixText: "+91 ",
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.phone),
-                        filled: true,
-                        fillColor: Colors.grey[50],
+                        prefixStyle: AppTheme.bodyText,
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.divider),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.accent, width: 2),
+                        ),
+                        errorBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.error),
+                        ),
+                        counterText: "",
                       ),
                       keyboardType: TextInputType.phone,
                       maxLength: 10,
@@ -120,16 +122,11 @@ class _LoginScreenState extends State<LoginScreen> {
                         return null;
                       },
                     ),
-                    const Gap(24),
+                    const SizedBox(height: 48),
                     
                     // Get OTP Button
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey[300],
-                      ),
+                      style: AppTheme.primaryButton,
                       onPressed: isLoading ? null : _onGetOtp,
                       child: isLoading
                           ? const SizedBox(
@@ -140,22 +137,54 @@ class _LoginScreenState extends State<LoginScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text(
-                              "Get OTP",
-                              style: TextStyle(fontSize: 16),
-                            ),
+                          : const Text("Login"),
                     ),
-                    const Gap(24),
+                    const SizedBox(height: 32),
+                    
+                    // Divider with OR
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: AppTheme.divider,
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            "OR",
+                            style: TextStyle(
+                              color: AppTheme.textMuted,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Container(
+                            height: 1,
+                            color: AppTheme.divider,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
                     
                     // Info text
-                    Text(
-                      "We'll send a verification code to your phone",
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                    RichText(
                       textAlign: TextAlign.center,
+                      text: const TextSpan(
+                        style: TextStyle(color: AppTheme.textSecondary),
+                        children: [
+                          TextSpan(text: "We'll send a verification code to "),
+                          TextSpan(
+                            text: "verify your phone",
+                            style: TextStyle(color: AppTheme.accent),
+                          ),
+                        ],
+                      ),
                     ),
+                    const Spacer(flex: 3),
                   ],
                 ),
               ),

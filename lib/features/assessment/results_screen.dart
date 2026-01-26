@@ -1,5 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:khel_mitra/core/theme/app_theme.dart';
 import 'package:khel_mitra/features/assessment/history_screen.dart';
+import 'package:khel_mitra/features/assessment/jump_replay_screen.dart';
 import 'package:khel_mitra/features/assessment/models/attempt_model.dart';
 
 class ResultsScreen extends StatelessWidget {
@@ -10,7 +13,7 @@ class ResultsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1A1A2E),
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -24,13 +27,13 @@ class ResultsScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
-                    colors: [Colors.green.shade400, Colors.green.shade700],
+                    colors: [AppTheme.success, AppTheme.success.withOpacity(0.7)],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.4),
+                      color: AppTheme.success.withOpacity(0.4),
                       blurRadius: 30,
                       spreadRadius: 5,
                     ),
@@ -51,16 +54,16 @@ class ResultsScreen extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 "Your vertical jump height",
-                style: TextStyle(fontSize: 16, color: Colors.grey.shade400),
+                style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
               ),
               const SizedBox(height: 32),
               // Jump Height Display
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.1),
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white24),
+                  border: Border.all(color: AppTheme.divider),
                 ),
                 child: Column(
                   children: [
@@ -86,8 +89,23 @@ class ResultsScreen extends StatelessWidget {
               // Timestamp
               Text(
                 _formatTimestamp(attempt.timestamp),
-                style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                style: TextStyle(fontSize: 14, color: AppTheme.textMuted),
               ),
+              const SizedBox(height: 24),
+              // Watch Replay Button (only show if replay data exists)
+              if (attempt.hasReplay)
+                ElevatedButton.icon(
+                  onPressed: () => _watchReplay(context),
+                  icon: const Icon(Icons.replay_circle_filled),
+                  label: const Text("Watch Replay"),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                    backgroundColor: AppTheme.accent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                ),
               const Spacer(),
               // Buttons
               Row(
@@ -97,14 +115,14 @@ class ResultsScreen extends StatelessWidget {
                       onPressed: () => _navigateToHistory(context),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: const BorderSide(color: Colors.white24),
+                        side: const BorderSide(color: AppTheme.divider),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                       child: const Text(
                         "History",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        style: TextStyle(color: AppTheme.textPrimary, fontSize: 16),
                       ),
                     ),
                   ),
@@ -115,9 +133,9 @@ class ResultsScreen extends StatelessWidget {
                       onPressed: () => _tryAgain(context),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.green,
+                        backgroundColor: AppTheme.success,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                       child: const Text(
@@ -131,9 +149,9 @@ class ResultsScreen extends StatelessWidget {
               const SizedBox(height: 16),
               TextButton(
                 onPressed: () => _goHome(context),
-                child: Text(
+                child: const Text(
                   "Back to Home",
-                  style: TextStyle(color: Colors.grey.shade400),
+                  style: TextStyle(color: AppTheme.textSecondary),
                 ),
               ),
             ],
@@ -165,5 +183,14 @@ class ResultsScreen extends StatelessWidget {
 
   void _goHome(BuildContext context) {
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _watchReplay(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => JumpReplayScreen(attempt: attempt),
+      ),
+    );
   }
 }

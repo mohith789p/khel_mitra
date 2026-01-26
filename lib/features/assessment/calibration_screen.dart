@@ -5,6 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:khel_mitra/core/di/injection.dart';
+import 'package:khel_mitra/core/theme/app_theme.dart';
 import 'package:khel_mitra/features/assessment/pose_painter.dart';
 import 'package:khel_mitra/features/assessment/vjh_test_screen.dart';
 import 'package:khel_mitra/features/profile/domain/profile_repository.dart';
@@ -307,13 +308,22 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
   @override
   Widget build(BuildContext context) {
     if (!_isInitialized || _cameraController == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        backgroundColor: AppTheme.background,
+        body: const Center(
+          child: CircularProgressIndicator(color: AppTheme.accent),
+        ),
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text("Calibration")),
+      backgroundColor: AppTheme.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text("Calibration", style: TextStyle(color: AppTheme.textPrimary)),
+        centerTitle: true,
+      ),
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -329,7 +339,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
           // Stability overlay
           if (!_isDeviceStable)
             Container(
-              color: Colors.red.withOpacity(0.5),
+              color: AppTheme.error.withOpacity(0.7),
               child: const Center(
                 child: Text(
                   "📱 Hold Phone Still",
@@ -367,7 +377,12 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 minimumSize: const Size.fromHeight(56),
-                backgroundColor: _calibrationState == CalibrationState.ready ? Colors.green : Colors.grey,
+                backgroundColor: _calibrationState == CalibrationState.ready 
+                    ? AppTheme.success 
+                    : AppTheme.surfaceLight,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
               ),
               onPressed: _calibrationState == CalibrationState.ready ? _onStartAttempt : null,
               child: Text(
@@ -388,19 +403,19 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
     switch (_calibrationState) {
       case CalibrationState.initializing:
         status = "Initializing...";
-        color = Colors.grey;
+        color = AppTheme.textMuted;
         break;
       case CalibrationState.stabilizingDevice:
         status = "Stabilize your device";
-        color = Colors.orange;
+        color = AppTheme.warning;
         break;
       case CalibrationState.calibrating:
         status = "Stand still in frame";
-        color = Colors.blue;
+        color = AppTheme.accent;
         break;
       case CalibrationState.ready:
         status = "Ready! ✓";
-        color = Colors.green;
+        color = AppTheme.success;
         break;
     }
 
@@ -408,7 +423,7 @@ class _CalibrationScreenState extends State<CalibrationScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: color.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
         status,

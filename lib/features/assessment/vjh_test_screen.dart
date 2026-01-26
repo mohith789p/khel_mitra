@@ -7,9 +7,9 @@ import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
 import 'package:khel_mitra/core/di/injection.dart';
 import 'package:khel_mitra/features/assessment/domain/attempts_repository.dart';
 import 'package:khel_mitra/features/assessment/models/attempt_model.dart';
+import 'package:khel_mitra/features/assessment/models/pose_frame.dart';
 import 'package:khel_mitra/features/assessment/pose_painter.dart';
 import 'package:khel_mitra/features/assessment/results_screen.dart';
-import 'package:path_provider/path_provider.dart';
 
 enum TestState {
   countdown,
@@ -50,7 +50,12 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
   bool _jumpDetected = false;
   bool _landingDetected = false;
 
-  // Video Recording
+  // Pose Recording for Replay
+  final List<PoseFrame> _recordedFrames = [];
+  DateTime? _recordingStartTime;
+  int? _peakFrameIndex;
+
+  // Video Recording (disabled - camera limitation)
   String? _videoPath;
   final AttemptsRepository _attemptsRepo = getIt<AttemptsRepository>();
 
@@ -120,16 +125,10 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
   Future<void> _startRecording() async {
     setState(() => _testState = TestState.recording);
 
-    // Start video recording
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _videoPath = '${dir.path}/vjh_$timestamp.mp4';
-      // await _cameraController!.startVideoRecording();
-      debugPrint("Recording started: $_videoPath");
-    } catch (e) {
-      debugPrint("Video recording error: $e");
-    }
+    // NOTE: Video recording is disabled because camera package cannot
+    // do video recording and image streaming simultaneously.
+    // We need image streaming for real-time pose detection.
+    _videoPath = null;
 
     // Start pose stream for jump detection
     _startPoseStream();
@@ -166,6 +165,9 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
             _imageSize = Size(image.width.toDouble(), image.height.toDouble());
           });
 
+          // Record pose frame for replay
+          _recordPoseFrame(poses.first);
+
           _processJumpDetection(poses.first);
         }
       }
@@ -174,6 +176,13 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
     } finally {
       _isProcessing = false;
     }
+  }
+
+  /// Record current pose for replay animation
+  void _recordPoseFrame(Pose pose) {
+    _recordingStartTime ??= DateTime.now();
+    final timestampMs = DateTime.now().difference(_recordingStartTime!).inMilliseconds;
+    _recordedFrames.add(PoseFrame.fromPose(pose, timestampMs));
   }
 
   void _processJumpDetection(Pose pose) {
@@ -223,7 +232,6 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
       if (_cameraController != null && !_isCameraDisposed) {
         await _cameraController!.stopImageStream();
       }
-      // Video recording was disabled, skip stopVideoRecording
       debugPrint("Recording stopped");
     } catch (e) {
       debugPrint("Stop recording error: $e");
@@ -241,14 +249,42 @@ class _VJHTestScreenState extends State<VJHTestScreen> {
       _jumpHeightCm = 0;
     }
 
-    // Save attempt
+    // Find peak frame index
+    if (_peakHeelY != null && _recordedFrames.isNotEmpty) {
+      _peakFrameIndex = _recordedFrames.indexWhere((f) => f.heelY == _peakHeelY);
+      if (_peakFrameIndex == -1) {
+        // Find closest frame to peak
+        double minDiff = double.infinity;
+        for (int i = 0; i < _recordedFrames.length; i++) {
+          final diff = (_recordedFrames[i].heelY ?? 0) - _peakHeelY!;
+          if (diff.abs() < minDiff) {
+            minDiff = diff.abs();
+            _peakFrameIndex = i;
+          }
+        }
+      }
+    }
+
+    // Create replay data
+    final replayData = JumpReplayData(
+      frames: List.from(_recordedFrames),
+      jumpHeightCm: _jumpHeightCm ?? 0,
+      peakFrameIndex: _peakFrameIndex,
+      baselineHeelY: _baselineHeelY,
+      peakHeelY: _peakHeelY,
+    );
+
+    // Save attempt with replay data
     final attempt = AttemptModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       timestamp: DateTime.now(),
       jumpHeightCm: _jumpHeightCm ?? 0,
       videoPath: _videoPath,
+      replayData: replayData,
     );
     _attemptsRepo.saveAttempt(attempt);
+
+    debugPrint("Saved ${_recordedFrames.length} pose frames for replay");
 
     // Navigate to results screen (pushReplacement to avoid camera issues)
     _isCameraDisposed = true;

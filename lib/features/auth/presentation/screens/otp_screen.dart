@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:gap/gap.dart';
+import 'package:khel_mitra/core/theme/app_theme.dart';
 import 'package:khel_mitra/features/auth/presentation/bloc/auth_bloc.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
   final String verificationId;
-  
+
   const OtpScreen({
     super.key,
     required this.phoneNumber,
@@ -21,7 +21,7 @@ class OtpScreen extends StatefulWidget {
 class _OtpScreenState extends State<OtpScreen> {
   final _otpController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
-  
+
   // Resend timer
   Timer? _resendTimer;
   int _resendCountdown = 60;
@@ -44,7 +44,7 @@ class _OtpScreenState extends State<OtpScreen> {
     _resendCountdown = 60;
     _canResend = false;
     _resendTimer?.cancel();
-    
+
     _resendTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (_resendCountdown > 0) {
@@ -76,96 +76,113 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text("Verify OTP"),
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppTheme.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
       body: BlocConsumer<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // Pop back to root - RootWrapper will handle navigation
             Navigator.of(context).popUntil((route) => route.isFirst);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: AppTheme.error,
               ),
             );
           } else if (state is CodeSent) {
-            // OTP resent successfully
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text('OTP sent successfully!'),
-                backgroundColor: Colors.green,
+                backgroundColor: AppTheme.success,
               ),
             );
           }
         },
         builder: (context, state) {
           final isLoading = state is AuthLoading;
-          
+
           return SafeArea(
             child: Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: const EdgeInsets.symmetric(horizontal: 32.0),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Gap(32),
-                    
-                    // Phone number display
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.deepPurple.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                    const SizedBox(height: 32),
+                    // Title
+                    const Text(
+                      "Verification",
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                        fontStyle: FontStyle.italic,
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.phone, color: Colors.deepPurple),
-                          const Gap(12),
-                          Text(
-                            "+91 ${widget.phoneNumber}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    const Gap(24),
-                    
+                    const SizedBox(height: 16),
                     Text(
-                      "Enter the 6-digit OTP sent to your phone",
+                      "Enter the code sent to",
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: AppTheme.textSecondary,
                       ),
+                      textAlign: TextAlign.center,
                     ),
-                    const Gap(16),
-                    
+                    const SizedBox(height: 4),
+                    Text(
+                      "+91 ${widget.phoneNumber}",
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.accent,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 48),
+
+                    // OTP Label
+                    const Text(
+                      "VERIFICATION CODE",
+                      style: AppTheme.labelText,
+                    ),
+                    const SizedBox(height: 8),
                     // OTP Input
                     TextFormField(
                       controller: _otpController,
                       enabled: !isLoading,
+                      style: const TextStyle(
+                        fontSize: 28,
+                        letterSpacing: 12,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textPrimary,
+                      ),
                       decoration: InputDecoration(
-                        labelText: "OTP",
-                        border: const OutlineInputBorder(),
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        filled: true,
-                        fillColor: Colors.grey[50],
+                        hintText: "• • • • • •",
+                        hintStyle: TextStyle(
+                          fontSize: 28,
+                          letterSpacing: 12,
+                          color: AppTheme.textMuted,
+                        ),
+                        enabledBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.divider),
+                        ),
+                        focusedBorder: const UnderlineInputBorder(
+                          borderSide: BorderSide(color: AppTheme.accent, width: 2),
+                        ),
+                        counterText: "",
                       ),
                       keyboardType: TextInputType.number,
                       maxLength: 6,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        letterSpacing: 8,
-                        fontWeight: FontWeight.bold,
-                      ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter the OTP';
@@ -176,16 +193,11 @@ class _OtpScreenState extends State<OtpScreen> {
                         return null;
                       },
                     ),
-                    const Gap(24),
-                    
+                    const SizedBox(height: 48),
+
                     // Verify Button
                     ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        backgroundColor: Colors.deepPurple,
-                        foregroundColor: Colors.white,
-                        disabledBackgroundColor: Colors.grey[300],
-                      ),
+                      style: AppTheme.primaryButton,
                       onPressed: isLoading ? null : _onVerify,
                       child: isLoading
                           ? const SizedBox(
@@ -196,24 +208,24 @@ class _OtpScreenState extends State<OtpScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : const Text(
-                              "Verify",
-                              style: TextStyle(fontSize: 16),
-                            ),
+                          : const Text("Verify"),
                     ),
-                    const Gap(24),
-                    
+                    const SizedBox(height: 32),
+
                     // Resend OTP
                     Center(
                       child: _canResend
                           ? TextButton(
                               onPressed: _onResend,
-                              child: const Text("Resend OTP"),
+                              child: const Text(
+                                "Resend OTP",
+                                style: TextStyle(color: AppTheme.accent),
+                              ),
                             )
                           : Text(
                               "Resend OTP in $_resendCountdown seconds",
-                              style: TextStyle(
-                                color: Colors.grey[600],
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
                                 fontSize: 14,
                               ),
                             ),
